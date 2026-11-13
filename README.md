@@ -1,35 +1,54 @@
-# iCloud Passwords for Chrome on Windows
+# iCloud Passwords verification helper for Chrome
 
-Fill the iCloud Passwords verification code when you open a fresh Chrome session. Open Chrome from your usual shortcut, then click the iCloud Passwords extension when you need it. The helper waits as long as Chrome stays open and exits after one fill attempt or when all Chrome windows close.
+This Windows helper fills in the six-digit code that iCloud Passwords shows when you verify the Chrome extension. Open Chrome with the included launcher, then click the iCloud Passwords icon when you need it.
 
-## Requirements
+## What you need
 
-- Windows PowerShell 5.1
-- Google Chrome and the iCloud Passwords extension
-- iCloud for Windows with Passwords enabled
-- The English iCloud verification dialog
+- Windows with Windows PowerShell 5.1
+- Google Chrome with the iCloud Passwords extension installed
+- iCloud for Windows, signed in with Passwords enabled
+- An iCloud verification dialog displayed in English
 
-## Try it
+## Get started
 
-Clone the repo and double-click **Open Chrome with iCloud.cmd** after closing all Chrome windows. Once Chrome opens, click the iCloud Passwords extension icon. The extension submits automatically after the sixth digit.
+1. [Download the ZIP](https://github.com/dddd-zdf/icloud-chrome-verification/archive/refs/heads/main.zip) and extract it. Keep the two script files together.
+2. Close all Chrome windows.
+3. Double-click **Open Chrome with iCloud.cmd** in the extracted folder.
+4. Click **iCloud Passwords** in Chrome's toolbar or Extensions menu. Keep Chrome in the foreground while the helper fills the code. The extension submits it after the sixth digit.
 
-## Use your existing taskbar shortcut
+You can click the extension later in the same Chrome session. The helper waits until it makes one fill attempt or you close all Chrome windows. If Chrome already had a window open when you ran the launcher, close all Chrome windows and try again.
 
-1. Find the pinned **Google Chrome** shortcut. On Windows, right-click its taskbar icon, then right-click **Google Chrome** in the menu and choose **Properties**.
-2. Save the original **Target** so you can restore it later.
-3. Set **Target** to the following, substituting the full path to your clone.
+## Use your pinned Chrome shortcut
+
+If you want the helper to start from your existing taskbar shortcut:
+
+1. Move the extracted folder somewhere you plan to keep it.
+2. Right-click the pinned Chrome icon, then right-click **Google Chrome** in the menu and choose **Properties**.
+3. Copy the original **Target** somewhere safe so you can restore it.
+4. Replace **Target** with the line below. Change the quoted path to the full path to your copy of the PowerShell script.
 
    ```text
    %SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -MTA -WindowStyle Hidden -File "C:\path\to\icloud-chrome-verification\Watch-ICloudChromeVerification.ps1" -Mode Launch -ShortcutLocation taskbar
    ```
 
-4. Close all Chrome windows, reopen Chrome from the taskbar, and click the extension once. Keep Chrome in the foreground while it fills.
+5. Click **OK**, close all Chrome windows, and reopen Chrome from the pinned icon.
 
-If Chrome already has a window open, the shortcut launches Chrome normally and the helper exits. To undo the setup, restore the shortcut's original Target.
+To undo the change, paste the original **Target** back into the shortcut properties.
 
-## Manual testing
+## If the code does not fill
 
-From the repo directory, start one of these modes and then open the extension.
+- Make sure you started Chrome with the launcher or the updated shortcut after closing all Chrome windows.
+- Keep Chrome in the foreground and leave focus in the first verification field.
+- If Windows PowerShell reports that the downloaded script is blocked, right-click the ZIP, choose **Properties**, select **Unblock** if shown, and extract it again.
+- If only some digits appear, finish entering the code manually or start a fresh verification prompt.
+
+## How it handles the code
+
+The helper reads the code from Apple's Windows dialog using Windows accessibility. Before typing, it checks the foreground Chrome window, the iCloud Passwords extension URL, and the focused verification field. It keeps the code in memory for the attempt and never logs it, saves it to disk, or copies it to the clipboard.
+
+## Manual checks
+
+Run one command from the extracted folder, then open the extension to trigger verification.
 
 ```powershell
 powershell.exe -NoProfile -MTA -File .\Watch-ICloudChromeVerification.ps1 -Mode Detect
@@ -37,14 +56,8 @@ powershell.exe -NoProfile -MTA -File .\Watch-ICloudChromeVerification.ps1 -Mode 
 powershell.exe -NoProfile -MTA -File .\Watch-ICloudChromeVerification.ps1 -Mode Fill
 ```
 
-| Mode | Behavior |
-| --- | --- |
-| `Detect` | Confirms the Windows code dialog can be read. |
-| `Check` | Also confirms the first extension field has focus. |
-| `Fill` | Enters the code once when the dialog and destination both match. |
+- **Detect** checks whether the helper can read the Windows dialog.
+- **Check** also verifies that the first extension field has focus.
+- **Fill** attempts to enter the code once both checks pass.
 
-Each manual run waits 45 seconds by default. Use `-TimeoutSeconds 90` for more time. If focus changes during entry, finish manually or start a fresh challenge.
-
-## How it works
-
-The launcher checks for Chrome windows twice a second and uses Windows UI Automation only when the iCloud helper has a visible dialog. It verifies the iCloud helper process, the dialog contents, Chrome's foreground window, the exact extension URL, and the focused PIN field before entry. The extension advances through the six fields and handles submission. The code stays in memory for the attempt and is never logged, saved, or copied to the clipboard.
+Each manual run waits 45 seconds by default. Add `-TimeoutSeconds 90` to wait longer.
